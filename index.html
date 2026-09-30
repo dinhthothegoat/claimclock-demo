@@ -1,0 +1,710 @@
+<!doctype html>
+<html lang="en-AU">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ClaimClock</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@500;600;700&family=Public+Sans:wght@400;500;600&display=swap">
+<style>
+:root{
+  --ink:#17231d; --muted:#56655c; --paper:#f4f6f3; --surface:#ffffff; --line:#d7dfd9; --line-strong:#b9c5bd;
+  --brand:#0b6e4f; --brand-ink:#ffffff; --brand-soft:#e3f2eb;
+  --warn:#8f5600; --warn-soft:#fff2dc; --bad:#a8221b; --bad-soft:#fde9e7; --ok:#0b6e4f; --ok-soft:#e3f2eb;
+  --focus:#1c64d6; --shadow:0 1px 2px rgba(23,35,29,.06);
+  --display:"Barlow Semi Condensed","Arial Narrow",Arial,sans-serif;
+  --body:"Public Sans",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  color-scheme:dark; --ink:#e3ebe5; --muted:#9fb0a5; --paper:#0f1512; --surface:#161f1a; --line:#27332c; --line-strong:#3a4a40;
+  --brand:#3bbd8c; --brand-ink:#08130e; --brand-soft:#15342a;
+  --warn:#f0b35a; --warn-soft:#33260f; --bad:#ff8f86; --bad-soft:#3a1715; --ok:#3bbd8c; --ok-soft:#15342a; --focus:#7fb0ff; --shadow:none;}}
+:root[data-theme="dark"]{
+  color-scheme:dark; --ink:#e3ebe5; --muted:#9fb0a5; --paper:#0f1512; --surface:#161f1a; --line:#27332c; --line-strong:#3a4a40;
+  --brand:#3bbd8c; --brand-ink:#08130e; --brand-soft:#15342a;
+  --warn:#f0b35a; --warn-soft:#33260f; --bad:#ff8f86; --bad-soft:#3a1715; --ok:#3bbd8c; --ok-soft:#15342a; --focus:#7fb0ff; --shadow:none;}
+*{box-sizing:border-box}
+body{background:var(--paper);color:var(--ink);font:15px/1.5 var(--body);margin:0}
+.wrap{max-width:1040px;margin:0 auto;padding-inline:16px}
+a{color:var(--brand)}
+button,input,select,textarea{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+h1,h2,h3{font-family:var(--display);letter-spacing:-.01em;text-wrap:balance;margin:0}
+h1{font-size:1.9rem;line-height:1.1;font-weight:700}
+h2{font-size:1.25rem;font-weight:600;margin-top:28px;margin-bottom:10px}
+h3{font-size:1.05rem;font-weight:600;margin-bottom:6px}
+.num,.kpi,table td.n{font-variant-numeric:tabular-nums}
+.muted{color:var(--muted)} .small{font-size:.85rem}
+.top{background:var(--surface);border-bottom:1px solid var(--line);position:sticky;top:env(safe-area-inset-top,0px);z-index:5}
+.top .wrap{display:flex;align-items:center;gap:12px;flex-wrap:wrap;min-height:56px}
+.logo{font-family:var(--display);font-weight:700;font-size:1.3rem;text-decoration:none;color:var(--ink);letter-spacing:-.01em;background:none;border:0;padding:0;cursor:pointer}
+.logo span{color:var(--brand)}
+.chip{font-size:.75rem;font-weight:600;letter-spacing:.04em;text-transform:uppercase;border:1px dashed var(--line-strong);color:var(--muted);border-radius:4px;padding:2px 8px}
+.spacer{flex:1}
+nav.tabs{display:flex;gap:4px}
+.tab{background:none;border:0;padding:8px 10px;border-radius:6px;cursor:pointer;color:var(--muted);font-weight:500}
+.tab[aria-current="page"]{color:var(--ink);background:var(--brand-soft)}
+main{padding-block:22px 56px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:16px;box-shadow:var(--shadow)}
+.stack{display:grid;gap:12px}
+.grid{display:grid;gap:12px}
+@media(min-width:720px){.grid.c2{grid-template-columns:1fr 1fr}.grid.c3{grid-template-columns:repeat(3,1fr)}}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:42px;padding:8px 16px;border-radius:8px;border:1px solid var(--brand);background:var(--brand);color:var(--brand-ink);font-weight:600;cursor:pointer;text-decoration:none}
+.btn.ghost{background:transparent;color:var(--brand)}
+.btn.quiet{background:transparent;border-color:var(--line-strong);color:var(--ink)}
+.btn.danger{background:transparent;color:var(--bad);border-color:var(--bad)}
+.btn.sm{min-height:34px;padding:4px 12px;font-size:.9rem}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+label{display:block;font-weight:600;font-size:.9rem;margin:10px 0 4px}
+label .muted{font-weight:400}
+input,select,textarea{width:100%;min-height:42px;padding:8px 10px;border:1px solid var(--line-strong);border-radius:8px;background:var(--surface)}
+textarea{min-height:120px;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.85rem}
+.f2{display:grid;gap:0 12px}@media(min-width:600px){.f2{grid-template-columns:1fr 1fr}.f3{grid-template-columns:1fr 1fr 1fr}}
+.f3{display:grid;gap:0 12px}
+.check{display:flex;gap:8px;align-items:center;font-weight:500;margin-top:12px}
+.check input{width:auto;min-height:0}
+.badge{display:inline-block;font-size:.75rem;font-weight:600;padding:2px 8px;border-radius:999px;white-space:nowrap}
+.b-ok{background:var(--ok-soft);color:var(--ok)} .b-warn{background:var(--warn-soft);color:var(--warn)} .b-bad{background:var(--bad-soft);color:var(--bad)} .b-muted{background:var(--paper);color:var(--muted);border:1px solid var(--line)}
+.alert{display:grid;gap:4px;padding:12px 14px;border-radius:8px;border:1px solid var(--line);background:var(--surface);position:relative;padding-left:18px}
+.alert::before{content:"";position:absolute;left:0;top:0;bottom:0;width:5px;border-radius:8px 0 0 8px;background:var(--warn)}
+.alert.bad::before{background:var(--bad)} .alert.muted::before{background:var(--line-strong)}
+.alert .t{font-weight:600}
+.alert .due{font-family:var(--display);font-weight:600;color:var(--muted);font-size:.9rem}
+.tw{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:.92rem}
+th{font-size:.72rem;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);text-align:left;font-weight:600;padding:8px;border-bottom:1px solid var(--line)}
+td{padding:9px 8px;border-bottom:1px solid var(--line);vertical-align:top}
+th.n,td.n{text-align:right;white-space:nowrap}
+tr.tot td{font-weight:700;border-top:2px solid var(--ink)}
+td input{min-width:96px;text-align:right}
+.sum{display:grid;grid-template-columns:1fr auto;gap:5px 16px;font-variant-numeric:tabular-nums}
+.sum .v{text-align:right}
+.sum .big{font-family:var(--display);font-size:1.5rem;font-weight:700}
+.kpi{font-family:var(--display);font-size:1.6rem;font-weight:700;line-height:1.1}
+.lbl{font-size:.72rem;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.clock{display:grid;gap:0}
+.clock .r{display:grid;grid-template-columns:1fr auto auto;gap:12px;align-items:center;padding:10px 0;border-bottom:1px solid var(--line)}
+.clock .d{font-family:var(--display);font-weight:600;font-size:1.05rem;font-variant-numeric:tabular-nums}
+.flash{padding:10px 14px;border-radius:8px;background:var(--ok-soft);color:var(--ink);border:1px solid var(--line)}
+.flash.err{background:var(--bad-soft);color:var(--bad)}
+.sheet{background:var(--surface);border:1px solid var(--line-strong);border-radius:4px;padding:22px}
+.sheet h3{font-size:1.4rem;letter-spacing:.02em}
+.sheet .sopa{font-weight:600;border:1px solid var(--line-strong);padding:8px 10px;border-radius:4px;margin:10px 0}
+.kv{display:grid;grid-template-columns:minmax(120px,auto) 1fr;gap:4px 14px;font-size:.9rem}
+.kv div:nth-child(odd){color:var(--muted)}
+.hero{display:grid;gap:10px;margin-bottom:6px}
+.lead{font-size:1.02rem;color:var(--muted);max-width:66ch;margin:0}
+details summary{cursor:pointer;font-weight:600}
+ul.checks{list-style:none;padding:0;margin:0 0 8px;display:grid;gap:8px}
+.grid.cash{grid-template-columns:repeat(2,1fr)}@media(min-width:720px){.grid.cash{grid-template-columns:repeat(4,1fr)}}
+.bad-t{color:var(--bad)}
+footer{border-top:1px solid var(--line);padding-block:18px;color:var(--muted);font-size:.8rem}
+@media(max-width:640px){
+  table.st thead{position:absolute;left:-9999px}
+  table.st tr{display:grid;grid-template-columns:1fr 1fr;gap:2px 12px;padding:10px 0;border-bottom:1px solid var(--line)}
+  table.st td{border:0;padding:2px 0;text-align:left}
+  table.st td:first-child{grid-column:1/-1;font-weight:600}
+  table.st td[data-l]::before{content:attr(data-l);display:block;font-size:.68rem;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+  table.st td.wide{grid-column:1/-1}
+  table.st td input{text-align:left}
+  .clock .r{grid-template-columns:1fr auto}
+  .clock .r .b{grid-column:1/-1}
+}
+@media (prefers-reduced-motion: no-preference){.flash{animation:fl .25s ease-out}@keyframes fl{from{transform:translateY(-4px)}to{transform:none}}}
+</style>
+</head>
+<body>
+
+
+<header class="top"><div class="wrap">
+  <button class="logo" data-go="dashboard" type="button">Claim<span>Clock</span></button>
+  <span class="chip" title="Everything you enter stays in this browser">Live demo</span>
+  <span class="spacer"></span>
+  <nav class="tabs" aria-label="Main">
+    <button class="tab" type="button" data-go="dashboard">Dashboard</button>
+    <button class="tab" type="button" data-go="new">New contract</button>
+    <button class="tab" type="button" data-go="how">How it works</button>
+  </nav>
+</div></header>
+<main class="wrap" id="app" aria-live="polite"></main>
+<footer><div class="wrap">ClaimClock demo. Figures and NSW Security of Payment dates are calculated from the terms entered, using the same engine as the full app (NSW public holidays 2025 to 2027, 27 to 31 December excluded). Not legal advice. Demo data is kept only in this browser.</div></footer>
+
+<script>
+// ClaimClock engine: a line-for-line port of app/sopa.py and app/money.py.
+// Dates are ISO strings (YYYY-MM-DD); money is integer cents; percentages are basis points.
+var CC = (function () {
+  var HOLIDAYS = new Set(["2025-01-01","2025-01-27","2025-04-18","2025-04-19","2025-04-20","2025-04-21","2025-04-25","2025-06-09","2025-10-06","2025-12-25","2025-12-26","2026-01-01","2026-01-26","2026-04-03","2026-04-04","2026-04-05","2026-04-06","2026-04-25","2026-04-27","2026-06-08","2026-10-05","2026-12-25","2026-12-26","2026-12-28","2027-01-01","2027-01-26","2027-03-26","2027-03-27","2027-03-28","2027-03-29","2027-04-25","2027-04-26","2027-06-14","2027-10-04","2027-12-25","2027-12-26","2027-12-27","2027-12-28"]);
+  var COVER_FROM = "2025-01-01", COVER_UNTIL = "2027-12-31";
+  var MAX_SCHEDULE = 10, MAX_PAY = { subcontract: 20, head_contract: 15, residential_exempt: 10 };
+
+  function toD(iso) { var p = iso.split("-"); return new Date(Date.UTC(+p[0], +p[1] - 1, +p[2])); }
+  function iso(d) { return d.toISOString().slice(0, 10); }
+  function addDays(s, n) { var d = toD(s); d.setUTCDate(d.getUTCDate() + n); return iso(d); }
+
+  function isBusinessDay(s) {
+    if (s > COVER_UNTIL || s < COVER_FROM) throw new Error("out_of_range");
+    var d = toD(s), wd = d.getUTCDay();
+    if (wd === 0 || wd === 6) return false;
+    if (d.getUTCMonth() === 11 && d.getUTCDate() >= 27) return false;
+    return !HOLIDAYS.has(s);
+  }
+  function addBusinessDays(start, n) {
+    var d = start, c = 0;
+    while (c < n) { d = addDays(d, 1); if (isBusinessDay(d)) c++; }
+    return d;
+  }
+  function referenceDate(y, m) { return iso(new Date(Date.UTC(y, m, 0))); }
+  function addMonths(s, months) {
+    var p = s.split("-").map(Number), m = p[1] - 1 + months, y = p[0] + Math.floor(m / 12);
+    m = ((m % 12) + 12) % 12;
+    var last = new Date(Date.UTC(y, m + 1, 0)).getUTCDate();
+    return iso(new Date(Date.UTC(y, m, Math.min(p[2], last))));
+  }
+  function deadlines(served, scheduleDays, payDays, type, scheduleReceived) {
+    scheduleDays = Math.max(1, Math.min(scheduleDays, MAX_SCHEDULE));
+    payDays = Math.max(1, Math.min(payDays, MAX_PAY[type]));
+    var pay = addBusinessDays(served, payDays);
+    return {
+      served: served,
+      scheduleDue: addBusinessDays(served, scheduleDays),
+      paymentDue: pay,
+      adjNoticeIfNoSchedule: addBusinessDays(pay, 20),
+      adjApplyIfShort: scheduleReceived ? addBusinessDays(scheduleReceived, 10) : null,
+      adjApplyIfUnpaid: addBusinessDays(pay, 20)
+    };
+  }
+
+  // half-up (away from zero on ties), exact with BigInt
+  function pctOf(cents, bp) {
+    var n = BigInt(cents) * BigInt(bp), q = n / 10000n, r = n % 10000n;
+    if (r < 0n) r = -r;
+    if (r * 2n >= 10000n) q += (n < 0n ? -1n : 1n);
+    return Number(q);
+  }
+  function parseMoney(raw, allowNegative) {
+    if (raw == null) throw new Error("Amount is required");
+    var s = String(raw).trim().replace(/[,$\s]/g, "");
+    if (/^aud/i.test(s)) s = s.slice(3);
+    var neg = false;
+    if (s[0] === "(" && s[s.length - 1] === ")") { s = s.slice(1, -1); neg = true; }
+    if (s[0] === "-") { s = s.slice(1); neg = true; }
+    if (!/^(\d+(\.\d{1,2})?|\.\d{1,2})$/.test(s)) throw new Error("'" + raw + "' is not a valid amount");
+    var parts = s.split("."), whole = parts[0] || "0", frac = ((parts[1] || "") + "00").slice(0, 2);
+    var cents = Number(BigInt(whole) * 100n + BigInt(frac));
+    if (neg) { if (!allowNegative) throw new Error("Amount cannot be negative"); cents = -cents; }
+    if (Math.abs(cents) > 1e12) throw new Error("Amount is too large");
+    return cents;
+  }
+  function parsePercentBp(raw, maxPct) {
+    var s = String(raw == null ? "" : raw).trim(); if (/%$/.test(s)) s = s.slice(0, -1); s = s.trim();
+    if (!/^\d+(\.\d{1,2})?$/.test(s)) throw new Error("'" + raw + "' is not a valid percentage");
+    var p = s.split("."), bp = Number(p[0]) * 100 + Number(((p[1] || "") + "00").slice(0, 2));
+    if (bp > (maxPct == null ? 100 : maxPct) * 100) throw new Error("Percentage cannot exceed " + maxPct + "%");
+    return bp;
+  }
+  function parseLines(text) {
+    var out = [], errs = [];
+    var lines = String(text || "").split(/\r?\n/).filter(function (l) { return l.trim(); });
+    if (!lines.length) throw new Error("Add at least one line item");
+    if (lines.length > 200) throw new Error("Too many lines (max 200)");
+    lines.forEach(function (ln, i) {
+      var m = ln.trim().match(/^(.*?)[\t,;|]*\s*(\(?-?\$?\s?[\d,]*\.?\d+\)?)\s*$/);
+      var desc = m ? m[1].replace(/^[\s\t,;|-]+|[\s\t,;|-]+$/g, "") : "";
+      if (!m || !desc) { errs.push("Line " + (i + 1) + ": need 'description, amount'"); return; }
+      try {
+        var c = parseMoney(m[2]);
+        if (c === 0) { errs.push("Line " + (i + 1) + ": amount must be more than $0"); return; }
+        out.push([desc.slice(0, 200), c]);
+      } catch (e) { errs.push("Line " + (i + 1) + ": " + e.message); }
+    });
+    if (errs.length) throw new Error(errs.slice(0, 5).join("; "));
+    return out;
+  }
+  // shorthand for one line's total-to-date: 60% | +5000 | +10% | done | same | dollars
+  function parseProgress(raw, value, prev) {
+    var s = String(raw == null ? "" : raw).trim().toLowerCase();
+    if (!s) return 0;
+    if (/^(done|full|all|complete|finished)$/.test(s)) return value;
+    if (s === "same") return prev;
+    if (s[0] === "+") { var r = s.slice(1).trim(); return prev + (/%$/.test(r) ? pctOf(value, parsePercentBp(r, 100)) : parseMoney(r)); }
+    if (/%$/.test(s)) return pctOf(value, parsePercentBp(s, 100));
+    return parseMoney(s);
+  }
+  function fmt(c) {
+    var neg = c < 0; c = Math.abs(Math.round(c));
+    return (neg ? "-$" : "$") + Math.floor(c / 100).toLocaleString("en-AU") + "." + String(c % 100).padStart(2, "0");
+  }
+  function computeClaim(o) {
+    var contract = 0, variations = 0;
+    o.lines.forEach(function (l) { if (l.kind === "variation") variations += l.toDate; else contract += l.toDate; });
+    var gross = contract + variations;
+    var byRate = pctOf(gross, o.rateBp), cap = pctOf(o.contractSum, o.capBp);
+    var accrued = o.capBp > 0 ? Math.min(byRate, cap) : byRate;
+    var released = pctOf(accrued, o.releasedBp), held = accrued - released, net = gross - held;
+    var ex = net - o.lessPrevious, gst = o.gst ? pctOf(ex, 1000) : 0;
+    return { contractWork: contract, variations: variations, gross: gross, retentionAccrued: accrued,
+      retentionReleased: released, retentionHeld: held, net: net, lessPrevious: o.lessPrevious,
+      exGst: ex, gstAmt: gst, incGst: ex + gst, capped: o.capBp > 0 && byRate > cap };
+  }
+  return { isBusinessDay: isBusinessDay, addBusinessDays: addBusinessDays, referenceDate: referenceDate,
+    addMonths: addMonths, deadlines: deadlines, pctOf: pctOf, parseMoney: parseMoney,
+    parsePercentBp: parsePercentBp, parseLines: parseLines, parseProgress: parseProgress, fmt: fmt, computeClaim: computeClaim,
+    addDays: addDays, MAX_PAY: MAX_PAY, COVER_UNTIL: COVER_UNTIL };
+})();
+
+
+</script>
+<script>
+(function () {
+  "use strict";
+  var KEY = "claimclock-demo-v1";
+  var app = document.getElementById("app");
+  var flash = null;
+
+  function sydneyToday() {
+    var t = new Intl.DateTimeFormat("en-CA", { timeZone: "Australia/Sydney", year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date());
+    return t > CC.COVER_UNTIL ? CC.COVER_UNTIL : t;
+  }
+  var TODAY = sydneyToday();
+  function esc(s) { return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); }
+  var M = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+  var ML = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+  var WD = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
+  function dshort(s) { if (!s) return "-"; var p = s.split("-"); var wd = new Date(Date.UTC(+p[0], +p[1]-1, +p[2])).getUTCDay(); return WD[wd] + " " + (+p[2]) + " " + M[+p[1]-1]; }
+  function dlong(s) { if (!s) return "-"; var p = s.split("-"); return (+p[2]) + " " + ML[+p[1]-1] + " " + p[0]; }
+  function monthName(period) { var p = period.split("-"); return ML[+p[1]-1] + " " + p[0]; }
+  var fmt = CC.fmt;
+
+  // ---------- storage ----------
+  var state;
+  function save() { try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) {} }
+  function load() { try { var s = JSON.parse(localStorage.getItem(KEY) || "null"); if (s && s.v === 1) return s; } catch (e) {} return null; }
+  function nid() { state.seq = (state.seq || 100) + 1; return state.seq; }
+
+  function sampleState() {
+    state = { v: 1, seq: 100, business: "Sparky Bros Electrical", contracts: [] };
+    var y = +TODAY.slice(0, 4), m = +TODAY.slice(5, 7) - 1; if (m === 0) { m = 12; y--; }
+    var k = { id: nid(), builder: "Harbour Build Group", builderEmail: "accounts@harbourbuild.example", project: "Level 2 office fit-out",
+      address: "12 Smith St, Parramatta NSW", ref: "SC-0142", rateBp: 1000, capBp: 500, pcBp: 5000, dlp: 12,
+      schedDays: 10, payDays: 20, type: "subcontract", gst: true, pcDate: "", status: "active", lines: [], claims: [] };
+    [["Rough-in (Level 2)", 4200000], ["Main switchboard + DBs", 1850000], ["Fit-off", 3100000], ["Testing, tagging & commissioning", 650000]]
+      .forEach(function (l) { k.lines.push({ id: nid(), kind: "contract", desc: l[0], value: l[1] }); });
+    k.lines.push({ id: nid(), kind: "variation", status: "approved", desc: "V01 Extra GPOs to kitchenette", value: 240000 });
+    state.contracts.push(k);
+    var ref = CC.referenceDate(y, m);
+    var c = { id: nid(), number: 1, period: y + "-" + String(m).padStart(2, "0"), claimDate: ref, status: "draft", sopa: true, toDate: {} };
+    c.toDate[k.lines[0].id] = 3150000; c.toDate[k.lines[1].id] = 925000;
+    k.claims.push(c);
+    issue(k, c, ref);
+    c.scheduled = c.totals.exGst - 150000;
+    var recv = CC.addDays(TODAY, -2); c.schedRecv = recv < ref ? ref : recv;
+    c.note = "Switchboard: $1,500 held pending test certificate";
+    save();
+  }
+
+  // ---------- model (mirrors app/services.py) ----------
+  function contractSum(k) { return k.lines.filter(function (l) { return l.kind === "contract"; }).reduce(function (a, l) { return a + l.value; }, 0); }
+  function dlpEnd(k) { return k.pcDate ? CC.addMonths(k.pcDate, k.dlp) : null; }
+  function releasedBp(k, on) { if (!k.pcDate || on < k.pcDate) return 0; var e = dlpEnd(k); return e && on >= e ? 10000 : k.pcBp; }
+  function lessPrevious(k, number) {
+    return k.claims.filter(function (c) { return c.status === "issued" && c.number < number; })
+      .reduce(function (a, c) { return a + (c.scheduled != null ? c.scheduled : c.totals.exGst); }, 0);
+  }
+  function computeFor(k, c, toDate) {
+    return CC.computeClaim({ contractSum: contractSum(k), rateBp: k.rateBp, capBp: k.capBp, releasedBp: releasedBp(k, c.claimDate),
+      lines: k.lines.map(function (l) { return { kind: l.kind, toDate: toDate[l.id] || 0 }; }), lessPrevious: lessPrevious(k, c.number), gst: k.gst });
+  }
+  function totalsFor(k, c) { return c.status === "issued" ? c.totals : computeFor(k, c, c.toDate); }
+  function prevToDate(k, number) { var p = k.claims.filter(function (c) { return c.number < number; }).pop(); return p ? p.toDate : {}; }
+  function linesView(k, c) {
+    if (c.status === "issued" && c.linesSnap) return c.linesSnap;
+    var prev = prevToDate(k, c.number);
+    return k.lines.map(function (l) { return { id: l.id, kind: l.kind, status: l.status, desc: l.desc, value: l.value, prev: prev[l.id] || 0, toDate: c.toDate[l.id] || 0 }; });
+  }
+  function issue(k, c, served) {
+    c.totals = computeFor(k, c, c.toDate);
+    c.linesSnap = linesView(k, c);
+    c.parties = { business: state.business, builder: k.builder, project: k.project, address: k.address, ref: k.ref, sum: contractSum(k) };
+    c.status = "issued"; c.served = served; c.paid = 0;
+  }
+  function deadlinesFor(k, c) {
+    if (c.status !== "issued") return null;
+    try { return CC.deadlines(c.served, k.schedDays, k.payDays, k.type, c.schedRecv || null); } catch (e) { return null; }
+  }
+  function expectedInc(k, c) { if (c.scheduled == null) return c.totals.incGst; return c.scheduled + (k.gst ? CC.pctOf(c.scheduled, 1000) : 0); }
+  function claimState(k, c) {
+    if (c.status === "draft") return ["Draft", "muted"];
+    var claimed = c.totals.exGst, exp = expectedInc(k, c);
+    if (exp <= 0) { if (claimed > 0 && c.scheduled != null) return ["Nothing certified", "bad"]; if (claimed <= 0) return ["Nothing due", "muted"]; }
+    else if (c.paid >= exp) return [c.scheduled != null && c.scheduled < claimed ? "Paid (short-scheduled)" : "Paid", "ok"];
+    var dl = deadlinesFor(k, c); if (!dl) return ["Issued", "muted"];
+    if (c.scheduled == null && TODAY > dl.scheduleDue) return ["No schedule received", "bad"];
+    if (TODAY > dl.paymentDue) return [c.paid ? "Part paid, overdue" : "Payment overdue", "bad"];
+    if (c.scheduled != null && c.scheduled < claimed) return ["Short-scheduled", "warn"];
+    return [c.scheduled != null ? "Awaiting payment" : "Awaiting schedule", "warn"];
+  }
+  function attention() {
+    var items = [];
+    state.contracts.filter(function (k) { return k.status === "active"; }).forEach(function (k) {
+      var name = k.project + " (" + k.builder + ")";
+      k.claims.forEach(function (c) {
+        if (c.status !== "issued") return;
+        var st = claimState(k, c)[0]; if (st === "Paid" || st === "Nothing due") return;
+        var full = st.indexOf("Paid") === 0, dl = deadlinesFor(k, c), base = { k: k.id, c: c.id, title: "Claim #" + c.number + " · " + name };
+        if (!dl) { items.push(Object.assign({ rank: 5, tone: "muted", text: "Deadlines unavailable: holiday calendar covers 2025 to 2027." }, base)); return; }
+        if (c.scheduled == null) {
+          if (TODAY > dl.scheduleDue) {
+            var t = "No payment schedule by " + dshort(dl.scheduleDue) + ". Under NSW SOPA the builder may be liable for the full " + fmt(c.totals.incGst) + ".";
+            if (TODAY > dl.paymentDue) t += " Unpaid since " + dshort(dl.paymentDue) + ": adjudication notice window closes " + dshort(dl.adjNoticeIfNoSchedule) + ".";
+            items.push(Object.assign({ rank: 0, tone: "bad", due: dl.adjNoticeIfNoSchedule, text: t }, base));
+          } else items.push(Object.assign({ rank: 3, tone: "warn", due: dl.scheduleDue, text: "Payment schedule due by " + dshort(dl.scheduleDue) + "; payment due " + dshort(dl.paymentDue) + "." }, base));
+        } else {
+          if (c.scheduled < c.totals.exGst && dl.adjApplyIfShort && TODAY <= dl.adjApplyIfShort)
+            items.push(Object.assign({ rank: 1, tone: "warn", due: dl.adjApplyIfShort, text: "Builder scheduled " + fmt(c.totals.exGst - c.scheduled) + " less than you claimed (ex GST)" +
+              (c.note ? ', reason given: "' + c.note + '"' : ", with no reason recorded") + ". Adjudication application window closes " + dshort(dl.adjApplyIfShort) + ". The shortfall rolls into your next claim automatically." }, base));
+          if (!full) {
+            if (TODAY > dl.paymentDue) items.push(Object.assign({ rank: 0, tone: "bad", due: dl.adjApplyIfUnpaid, text: "Payment overdue since " + dshort(dl.paymentDue) + ". Adjudication window for the unpaid amount closes " + dshort(dl.adjApplyIfUnpaid) + "." }, base));
+            else items.push(Object.assign({ rank: 4, tone: "warn", due: dl.paymentDue, text: "Payment of scheduled amount due " + dshort(dl.paymentDue) + "." }, base));
+          }
+        }
+      });
+      var period = TODAY.slice(0, 7);
+      if (!k.claims.some(function (c) { return c.period === period; }) && +TODAY.slice(8) >= 20) {
+        var ref = CC.referenceDate(+TODAY.slice(0, 4), +TODAY.slice(5, 7));
+        items.push({ k: k.id, rank: 2, tone: "warn", due: ref, title: name, text: "No " + ML[+TODAY.slice(5, 7) - 1] + " claim yet. Reference date is " + dshort(ref) + "; the claim can be served from then." });
+      }
+      var last = k.claims.filter(function (c) { return c.status === "issued"; }).pop(), held = last ? last.totals.retentionHeld : 0, end = dlpEnd(k);
+      if (held > 0 && k.pcDate) {
+        if (TODAY >= k.pcDate && last.claimDate < k.pcDate && k.pcBp > 0)
+          items.push({ k: k.id, rank: 1, tone: "warn", due: k.pcDate, title: name, text: "Practical completion reached " + dlong(k.pcDate) + ". Your next claim releases " + k.pcBp / 100 + "% of retention." });
+        else if (end && (Date.parse(end) - Date.parse(TODAY)) / 864e5 <= 30)
+          items.push({ k: k.id, rank: TODAY >= end ? 1 : 3, tone: TODAY >= end ? "bad" : "warn", due: end, title: name, text: "Defects liability period " + (TODAY >= end ? "ended " : "ends ") + dlong(end) + ". " + fmt(held) + " retention still held: claim the final release." });
+      }
+    });
+    return items.sort(function (a, b) { return a.rank - b.rank || String(a.due || "9").localeCompare(String(b.due || "9")); });
+  }
+  function ledger(k) {
+    var last = k.claims.filter(function (c) { return c.status === "issued"; }).pop(); if (!last) return null;
+    var t = last.totals, pcShare = Math.max(0, CC.pctOf(t.retentionAccrued, k.pcBp) - t.retentionReleased);
+    return { held: t.retentionHeld, released: t.retentionReleased, cap: k.capBp ? CC.pctOf(contractSum(k), k.capBp) : null, pcShare: pcShare, final: Math.max(0, t.retentionHeld - pcShare), n: last.number };
+  }
+  function checkClaim(k, c) {
+    var lines = linesView(k, c), t = computeFor(k, c, c.toDate), out = [];
+    var earlier = k.claims.filter(function (x) { return x.status === "issued" && x.number < c.number; });
+    var period = lines.reduce(function (a, l) { return a + l.toDate - l.prev; }, 0);
+    if (t.exGst < 0) out.push(["stop", "This claim is negative (" + fmt(t.exGst) + "): earlier certified amounts are more than the work to date."]);
+    if (t.gross === 0) out.push(["stop", "Nothing claimed yet. Enter progress on at least one line."]);
+    lines.forEach(function (l) {
+      if (l.toDate < l.prev) out.push(["warn", l.desc + " drops from " + fmt(l.prev) + " to " + fmt(l.toDate) + ". Builders read a lower figure as a correction; check it's intended."]);
+      if (l.kind === "variation" && l.status === "pending" && l.toDate > 0) out.push(["warn", "You're claiming " + fmt(l.toDate) + " on a pending variation (" + l.desc + "). It may be scheduled at $0 until it's approved."]);
+    });
+    if (earlier.length && period > 0) {
+      var prevG = 0, inc = [];
+      earlier.forEach(function (x) { if (x.totals.gross - prevG > 0) inc.push(x.totals.gross - prevG); prevG = x.totals.gross; });
+      if (inc.length) { var avg = inc.reduce(function (a, b) { return a + b; }, 0) / inc.length;
+        if (period > 2.5 * avg && period - avg > 1000000) out.push(["warn", "This month's work (" + fmt(period) + ") is " + (period / avg).toFixed(1) + "x your average month (" + fmt(Math.round(avg)) + "). Double-check the percentages."]); }
+    }
+    earlier.forEach(function (x) { var dl = deadlinesFor(k, x); if (x.scheduled == null && dl && TODAY > dl.scheduleDue && !x.paid) out.push(["info", "Claim #" + x.number + " has no payment schedule recorded. If one arrived, record it first: it changes this claim's 'less previous' line."]); });
+    if (period === 0 && t.exGst > 0) out.push(["info", "No new work this month. The claim re-claims " + fmt(t.exGst) + " the builder hasn't certified yet."]);
+    if (t.retentionReleased) out.push(["info", "Includes " + fmt(t.retentionReleased) + " of retention released after practical completion."]);
+    var appr = 0, done = 0; lines.forEach(function (l) { if (l.kind === "contract" || l.status === "approved") { appr += l.value; done += l.toDate; } });
+    if (appr && done >= appr && !k.pcDate && t.retentionHeld > 0) out.push(["info", "Everything is claimed at 100%. Enter the practical completion date on the contract so your retention release is tracked."]);
+    if (TODAY < c.claimDate) out.push(["info", "The reference date is " + dshort(c.claimDate) + ". Serve the claim on or after it, unless your contract allows earlier claims."]);
+    var order = { stop: 0, warn: 1, info: 2 };
+    return out.sort(function (a, b) { return order[a[0]] - order[b[0]]; });
+  }
+  function cashflow() {
+    var b = { overdue: 0, d30: 0, d60: 0, retention: 0 }, items = [];
+    state.contracts.forEach(function (k) {
+      var last = k.claims.filter(function (c) { return c.status === "issued"; }).pop(); if (last) b.retention += last.totals.retentionHeld;
+      k.claims.forEach(function (c) {
+        if (c.status !== "issued") return; var owed = expectedInc(k, c) - (c.paid || 0); if (owed <= 0) return;
+        var dl = deadlinesFor(k, c), due = dl ? dl.paymentDue : null, days = due ? (Date.parse(due) - Date.parse(TODAY)) / 864e5 : 999;
+        var key = due && due < TODAY ? "overdue" : days <= 30 ? "d30" : days <= 60 ? "d60" : null; if (key) b[key] += owed;
+        items.push({ due: due, owed: owed, key: key, k: k, c: c });
+      });
+    });
+    items.sort(function (x, y) { return String(x.due || "9").localeCompare(String(y.due || "9")); });
+    b.items = items.slice(0, 6); return b;
+  }
+  function findK(id) { return state.contracts.filter(function (k) { return k.id === id; })[0]; }
+  function findC(k, id) { return k && k.claims.filter(function (c) { return c.id === id; })[0]; }
+
+  // ---------- views ----------
+  var view = { name: "dashboard" };
+  function go(name, k, c) { view = { name: name, k: k, c: c }; render(); window.scrollTo(0, 0); }
+  function say(msg, err) { flash = { msg: msg, err: !!err }; }
+  function badge(s) { return '<span class="badge b-' + s[1] + '">' + esc(s[0]) + "</span>"; }
+  function flashHtml() { if (!flash) return ""; var h = '<div class="flash' + (flash.err ? " err" : "") + '" role="' + (flash.err ? "alert" : "status") + '">' + esc(flash.msg) + "</div>"; flash = null; return h; }
+
+  function vDashboard() {
+    var att = attention();
+    var rows = state.contracts.map(function (k) {
+      var last = k.claims.filter(function (c) { return c.status === "issued"; }).pop(), owed = 0;
+      k.claims.forEach(function (c) { if (c.status === "issued" && claimState(k, c)[0].indexOf("Paid") !== 0) owed += Math.max(0, expectedInc(k, c) - (c.paid || 0)); });
+      return '<tr><td><button class="btn ghost sm" data-open-k="' + k.id + '">' + esc(k.project) + "</button>" + (k.status === "closed" ? ' <span class="badge b-muted">Closed</span>' : "") +
+        '</td><td data-l="Builder">' + esc(k.builder) + '</td><td class="n" data-l="Contract">' + fmt(contractSum(k)) + '</td><td class="n" data-l="Claimed to date">' + fmt(last ? last.totals.gross : 0) +
+        '</td><td class="n" data-l="Retention held">' + fmt(last ? last.totals.retentionHeld : 0) + '</td><td class="n" data-l="Owed to you">' + fmt(owed) + "</td></tr>";
+    }).join("");
+    return '<div class="stack">' + flashHtml() +
+      '<div class="hero"><h1>' + esc(state.business) + '</h1><p class="lead">Month-end progress claims, retention and NSW Security of Payment deadlines. Today in Sydney is ' + dlong(TODAY) + '. This demo is loaded with a sample job: open it, raise this month\'s claim, and watch the clock.</p></div>' +
+      cashHtml(cashflow()) + "<h2>Needs attention</h2>" +
+      (att.length ? '<div class="stack">' + att.map(function (a) {
+        return '<div class="alert ' + a.tone + '"><div class="t">' + esc(a.title) + "</div><div>" + esc(a.text) + '</div><div class="row">' +
+          (a.c ? '<button class="btn ghost sm" data-open-c="' + a.k + ":" + a.c + '">Open claim</button>' : '<button class="btn ghost sm" data-open-k="' + a.k + '">Open contract</button>') + "</div></div>";
+      }).join("") + "</div>" : '<div class="card muted">Nothing due. Every issued claim is paid or inside its deadlines.</div>') +
+      "<h2>Contracts</h2>" + (rows ? '<div class="card tw"><table class="st"><thead><tr><th>Project</th><th>Builder</th><th class="n">Contract</th><th class="n">Claimed to date</th><th class="n">Retention held</th><th class="n">Owed to you</th></tr></thead><tbody>' + rows + "</tbody></table></div>" : '<div class="card muted">No contracts. Add one from your quote.</div>') +
+      '<div class="row"><button class="btn" data-go="new">Add a contract</button><button class="btn quiet" data-action="reset">Reset demo to the sample job</button></div></div>';
+  }
+
+  function cashHtml(b) {
+    if (!b.items.length && !b.retention) return "";
+    return '<h2>Money coming in</h2><div class="card stack"><div class="grid cash">' +
+      [["Overdue", b.overdue, b.overdue ? "bad-t" : ""], ["Due in 30 days", b.d30, ""], ["31 to 60 days", b.d60, ""], ["Retention held", b.retention, ""]].map(function (x) {
+        return '<div><div class="lbl">' + x[0] + '</div><div class="kpi ' + x[2] + '">' + fmt(x[1]) + "</div></div>"; }).join("") + "</div>" +
+      (b.items.length ? '<div class="tw"><table class="st"><thead><tr><th>Payment</th><th>Due</th><th class="n">Amount inc GST</th></tr></thead><tbody>' + b.items.map(function (i) {
+        return '<tr><td><button class="btn ghost sm" data-open-c="' + i.k.id + ":" + i.c.id + '">Claim #' + i.c.number + " · " + esc(i.k.project) + '</button></td><td data-l="Due">' + dshort(i.due) + (i.key === "overdue" ? ' <span class="badge b-bad">Overdue</span>' : "") + '</td><td class="n" data-l="Amount">' + fmt(i.owed) + "</td></tr>"; }).join("") + "</tbody></table></div>" : "") + "</div>";
+  }
+  function vNew() {
+    return '<div class="stack">' + flashHtml() + '<h1>New subcontract</h1><form class="card" id="f-new" novalidate>' +
+      '<div class="f2"><div><label for="n-b">Builder / head contractor</label><input id="n-b" required maxlength="120"></div><div><label for="n-p">Project</label><input id="n-p" required maxlength="160"></div></div>' +
+      '<div class="f2"><div><label for="n-r">Subcontract / PO number <span class="muted">(optional)</span></label><input id="n-r" maxlength="60"></div><div><label for="n-e">Builder accounts email <span class="muted">(optional)</span></label><input id="n-e" type="email"></div></div>' +
+      '<label for="n-l">Schedule of values <span class="muted">(one per line: description, amount ex GST; paste from Excel)</span></label><textarea id="n-l" placeholder="Rough-in, 42000&#10;Main switchboard and DBs, 18500&#10;Fit-off, 31000"></textarea>' +
+      '<h2>Retention</h2><div class="f3"><div><label for="n-rr">Held per claim (%)</label><input id="n-rr" value="10" inputmode="decimal"></div><div><label for="n-rc">Capped at (% of contract)</label><input id="n-rc" value="5" inputmode="decimal"></div><div><label for="n-rp">Back at practical completion (%)</label><input id="n-rp" value="50" inputmode="decimal"></div></div>' +
+      '<div class="f3"><div><label for="n-dl">Defects liability period (months)</label><input id="n-dl" value="12" inputmode="numeric"></div></div>' +
+      '<h2>Payment terms (NSW)</h2><div class="f3"><div><label for="n-t">Contract type</label><select id="n-t"><option value="subcontract">Subcontract (commercial), max 20 BD</option><option value="residential_exempt">Subcontract, exempt residential, max 10 BD</option><option value="head_contract">Head contract, max 15 BD</option></select></div>' +
+      '<div><label for="n-sd">Payment schedule within (business days)</label><input id="n-sd" value="10" inputmode="numeric"></div><div><label for="n-pd">Payment within (business days)</label><input id="n-pd" value="20" inputmode="numeric"></div></div>' +
+      '<label class="check"><input type="checkbox" id="n-g" checked> Registered for GST (adds 10%)</label>' +
+      '<div class="row" style="margin-top:14px"><button class="btn" type="submit">Save contract</button><button class="btn quiet" type="button" data-go="dashboard">Cancel</button></div></form></div>';
+  }
+
+  function vContract(k) {
+    var L = ledger(k), draft = k.claims.some(function (c) { return c.status === "draft"; });
+    var last = k.claims[k.claims.length - 1], months = [];
+    for (var back = 3; back >= -1; back--) {
+      var y = +TODAY.slice(0, 4), m = +TODAY.slice(5, 7) - back;
+      while (m <= 0) { m += 12; y--; } while (m > 12) { m -= 12; y++; }
+      var p = y + "-" + String(m).padStart(2, "0");
+      if ((!last || p > last.period) && p >= "2025-01" && p <= "2027-12") months.push(p);
+    }
+    var claims = k.claims.slice().reverse().map(function (c) {
+      var s = claimState(k, c), dl = deadlinesFor(k, c), t = totalsFor(k, c);
+      return '<tr><td><button class="btn ghost sm" data-open-c="' + k.id + ":" + c.id + '">Claim #' + c.number + " · " + esc(monthName(c.period)) + '</button></td><td data-l="Status">' + badge(s) +
+        '</td><td class="n" data-l="Amount inc GST">' + fmt(t.incGst) + '</td><td data-l="Schedule due">' + (dl ? dshort(dl.scheduleDue) : "-") + '</td><td data-l="Payment due">' + (dl ? dshort(dl.paymentDue) : "-") + "</td></tr>";
+    }).join("");
+    var lines = k.lines.map(function (l) {
+      return "<tr><td>" + (l.kind === "variation" ? '<span class="badge ' + (l.status === "approved" ? "b-ok" : "b-warn") + '">Variation, ' + l.status + "</span> " : "") + esc(l.desc) + '</td><td class="n" data-l="Value">' + fmt(l.value) + "</td></tr>";
+    }).join("");
+    return '<div class="stack">' + flashHtml() +
+      '<div><button class="btn ghost sm" data-go="dashboard">&larr; Dashboard</button></div>' +
+      '<div class="hero"><h1>' + esc(k.project) + '</h1><p class="lead">' + esc(k.builder) + (k.ref ? " · " + esc(k.ref) : "") + (k.address ? " · " + esc(k.address) : "") + "</p></div>" +
+      '<div class="grid c3"><div class="card"><div class="lbl">Contract sum ex GST</div><div class="kpi">' + fmt(contractSum(k)) + '</div></div><div class="card"><div class="lbl">Retention</div><div>' + k.rateBp / 100 + "% per claim, cap " + k.capBp / 100 + "%; " + k.pcBp / 100 + "% back at PC, rest after " + k.dlp + ' months</div></div><div class="card"><div class="lbl">Payment terms</div><div>Schedule in ' + k.schedDays + " BD · paid in " + k.payDays + " BD</div></div></div>" +
+      "<h2>Claims</h2>" + (claims ? '<div class="card tw"><table class="st"><thead><tr><th>Claim</th><th>Status</th><th class="n">Amount inc GST</th><th>Schedule due</th><th>Payment due</th></tr></thead><tbody>' + claims + "</tbody></table></div>" : '<div class="card muted">No claims yet.</div>') +
+      (k.status === "active" && !draft && months.length ? '<form class="card" id="f-start"><h3>Start the next claim</h3><label for="s-m">Work up to the end of</label><select id="s-m">' +
+        months.map(function (p) { return '<option value="' + p + '"' + (p === TODAY.slice(0, 7) ? " selected" : "") + ">" + monthName(p) + "</option>"; }).join("") +
+        '</select><div class="row" style="margin-top:12px"><button class="btn" type="submit">Start claim</button></div></form>' : "") +
+      "<h2>Retention</h2>" + (L ? '<div class="card"><div class="grid c3"><div><div class="lbl">Held by builder now</div><div class="kpi">' + fmt(L.held) + '</div><div class="small muted">' + (L.cap != null ? "cap " + fmt(L.cap) : "") +
+        '</div></div><div><div class="lbl">Back at practical completion</div><div class="kpi">' + fmt(L.pcShare) + '</div><div class="small muted">' + (k.pcDate ? dlong(k.pcDate) : "enter the PC date below") +
+        '</div></div><div><div class="lbl">Back at end of defects period</div><div class="kpi">' + fmt(L.final) + '</div><div class="small muted">' + (dlpEnd(k) ? dlong(dlpEnd(k)) : "after PC + " + k.dlp + " months") + '</div></div></div><p class="small muted">As at claim #' + L.n + ". Releases are added to your next claim automatically once the date passes.</p></div>" : '<div class="card muted">Retention starts with the first issued claim.</div>') +
+      '<h2>Schedule of values</h2><div class="card tw"><table class="st"><thead><tr><th>Item</th><th class="n">Value</th></tr></thead><tbody>' + lines + '<tr class="tot"><td>Contract sum (excl. variations)</td><td class="n" data-l="Total">' + fmt(contractSum(k)) + "</td></tr></tbody></table></div>" +
+      '<div class="grid c2"><form class="card" id="f-var" novalidate><h3>Add a variation</h3><label for="v-d">Description</label><input id="v-d" maxlength="200"><div class="f2"><div><label for="v-v">Value ex GST</label><input id="v-v" inputmode="decimal"></div><div><label for="v-s">Status</label><select id="v-s"><option value="approved">Approved</option><option value="pending">Pending approval</option></select></div></div><div class="row" style="margin-top:12px"><button class="btn quiet" type="submit">Add variation</button></div></form>' +
+      '<form class="card" id="f-pc" novalidate><h3>Practical completion</h3><label for="pc-d">Practical completion date</label><input id="pc-d" type="date" min="2025-01-01" max="2027-12-31" value="' + esc(k.pcDate) + '"><p class="small muted">Half of the retention (per the terms) comes back in the next claim after this date; the rest after the defects period.</p><div class="row"><button class="btn quiet" type="submit">Save date</button></div></form></div></div>';
+  }
+
+  function totalsHtml(t) {
+    return '<div class="sum"><div>Contract works to date</div><div class="v" id="t-cw">' + fmt(t.contractWork) + '</div><div>Variations to date</div><div class="v" id="t-v">' + fmt(t.variations) +
+      '</div><div>Gross value of work to date</div><div class="v" id="t-g">' + fmt(t.gross) + "</div><div>Less retention held" + (t.capped ? ' <span class="badge b-muted">capped</span>' : "") + (t.retentionReleased ? ' <span class="badge b-ok">' + fmt(t.retentionReleased) + " released</span>" : "") +
+      '</div><div class="v" id="t-r">(' + fmt(t.retentionHeld) + ')</div><div>Less previous (certified, or claimed if no schedule)</div><div class="v">(' + fmt(t.lessPrevious) + ')</div><div>This claim ex GST</div><div class="v" id="t-x">' + fmt(t.exGst) +
+      '</div><div>GST</div><div class="v" id="t-gst">' + fmt(t.gstAmt) + '</div><div class="big">Amount claimed</div><div class="v big" id="t-i">' + fmt(t.incGst) + "</div></div>";
+  }
+
+  function vEdit(k, c) {
+    var lv = linesView(k, c), t = totalsFor(k, c);
+    var rows = lv.map(function (l) {
+      return "<tr><td><label for=\"ln-" + l.id + '" style="margin:0;font-weight:600">' + (l.kind === "variation" ? '<span class="badge ' + (l.status === "approved" ? "b-ok" : "b-warn") + '">Var</span> ' : "") + esc(l.desc) +
+        '</label></td><td class="n" data-l="Value">' + fmt(l.value) + '</td><td class="n" data-l="Previous">' + fmt(l.prev) + '</td><td class="n wide" data-l="Total to date ($ or %)"><input id="ln-' + l.id + '" data-line="' + l.id + '" data-value="' + l.value + '" data-prev="' + l.prev + '" inputmode="decimal" value="' + (l.toDate / 100).toFixed(2) + '"></td><td class="n" data-l="This period" id="tp-' + l.id + '">' + fmt(l.toDate - l.prev) + "</td></tr>";
+    }).join("");
+    return '<div class="stack">' + flashHtml() + '<div><button class="btn ghost sm" data-open-k="' + k.id + '">&larr; ' + esc(k.project) + "</button></div>" +
+      '<div class="hero"><h1>Progress claim #' + c.number + ' <span class="badge b-muted">Draft</span></h1><p class="lead">Work up to ' + dlong(c.claimDate) + " (reference date). Enter the total completed to date on each line. Shortcuts: 60%, +5000 (add to last month), +10%, done (100%), same. Last month\'s figures are already filled in.</p></div>" +
+      '<form id="f-edit" class="stack" novalidate><div class="card tw"><table class="st"><thead><tr><th>Item</th><th class="n">Value</th><th class="n">Previous</th><th class="n">To date</th><th class="n">This period</th></tr></thead><tbody id="edit-rows">' + rows + '</tbody></table></div>' +
+      '<div class="card">' + totalsHtml(t) + "</div>" +
+      '<label class="check"><input type="checkbox" id="e-sopa"' + (c.sopa ? " checked" : "") + '> Include "This is a payment claim made under the Building and Construction Industry Security of Payment Act 1999 (NSW)"</label>' +
+      checksHtml(checkClaim(k, c)) + '<div class="card"><h3>Issue the claim</h3><label for="e-served">Date you serve (send) it</label><input id="e-served" type="date" min="2025-01-01" max="2027-12-31" value="' + (TODAY > c.claimDate ? TODAY : c.claimDate) + '"><p class="small muted">Deadlines are counted from this date. Issuing locks the claim as your record.</p>' +
+      '<div class="row"><button class="btn" type="submit" data-intent="issue">Issue claim</button><button class="btn quiet" type="submit" data-intent="save">Save draft and re-check</button><button class="btn danger" type="button" data-action="delete-draft" data-k="' + k.id + '" data-c="' + c.id + '">Delete draft</button></div></div></form></div>';
+  }
+
+  function checksHtml(list) {
+    var lab = { stop: ["Fix first", "b-bad"], warn: ["Check", "b-warn"], info: ["Note", "b-muted"] };
+    return '<div class="card"><h3>Claim check</h3>' + (list.length ? '<ul class="checks">' + list.map(function (x) { return '<li><span class="badge ' + lab[x[0]][1] + '">' + lab[x[0]][0] + "</span> " + esc(x[1]) + "</li>"; }).join("") +
+      '</ul><p class="small muted">Checked against the figures last saved. Save the draft to re-check after changes.</p>' : '<p class="muted">No problems found in the saved figures.</p>') + "</div>";
+  }
+  function sheetText(k, c) {
+    var p = c.parties, t = c.totals, out = ["PROGRESS CLAIM No. " + c.number];
+    if (c.sopa) out.push("This is a payment claim made under the Building and Construction Industry Security of Payment Act 1999 (NSW).");
+    out.push("", "From: " + p.business, "To: " + p.builder, "Project: " + p.project + (p.address ? ", " + p.address : ""), "Ref: " + (p.ref || "-"),
+      "Work up to: " + dlong(c.claimDate), "Date served: " + dlong(c.served), "");
+    c.linesSnap.forEach(function (l) { out.push(l.desc + ": to date " + fmt(l.toDate) + " of " + fmt(l.value) + " (this period " + fmt(l.toDate - l.prev) + ")"); });
+    out.push("", "Gross value of work to date: " + fmt(t.gross), "Less retention held: (" + fmt(t.retentionHeld) + ")", "Less previous: (" + fmt(t.lessPrevious) + ")",
+      "This claim ex GST: " + fmt(t.exGst), "GST: " + fmt(t.gstAmt), "AMOUNT CLAIMED inc GST: " + fmt(t.incGst));
+    return out.join("\n");
+  }
+
+  function vClaim(k, c) {
+    var s = claimState(k, c), dl = deadlinesFor(k, c), t = c.totals, p = c.parties;
+    function row(label, d, b) { return '<div class="r"><div>' + label + '</div><div class="d">' + dshort(d) + '</div><div class="b">' + (b || "") + "</div></div>"; }
+    var clock = dl ? '<div class="card clock">' +
+      row("Payment schedule due (builder)", dl.scheduleDue, c.scheduled != null ? '<span class="badge b-ok">Received ' + dshort(c.schedRecv) + "</span>" : (TODAY > dl.scheduleDue ? '<span class="badge b-bad">Late</span>' : '<span class="badge b-warn">' + Math.round((Date.parse(dl.scheduleDue) - Date.parse(TODAY)) / 864e5) + " days</span>")) +
+      row("Payment due", dl.paymentDue, s[0].indexOf("Paid") === 0 ? '<span class="badge b-ok">Paid</span>' : (TODAY > dl.paymentDue ? '<span class="badge b-bad">Overdue</span>' : "")) +
+      (c.scheduled == null ? row("If no schedule and unpaid: adjudication notice by", dl.adjNoticeIfNoSchedule) :
+        (c.scheduled < t.exGst && dl.adjApplyIfShort ? row("Scheduled less than claimed: adjudication application by", dl.adjApplyIfShort) : "") + row("If scheduled amount unpaid: adjudication application by", dl.adjApplyIfUnpaid)) +
+      '<p class="small muted" style="margin:10px 0 0">Business days exclude weekends, NSW public holidays and 27 to 31 December. Check your contract for shorter periods.</p></div>' : '<div class="card muted">Deadlines unavailable for dates outside 2025 to 2027.</div>';
+    var lines = c.linesSnap.map(function (l) { return "<tr><td>" + esc(l.desc) + '</td><td class="n" data-l="Value">' + fmt(l.value) + '</td><td class="n" data-l="Previous">' + fmt(l.prev) + '</td><td class="n" data-l="This period">' + fmt(l.toDate - l.prev) + '</td><td class="n" data-l="To date">' + fmt(l.toDate) + "</td></tr>"; }).join("");
+    return '<div class="stack">' + flashHtml() + '<div><button class="btn ghost sm" data-open-k="' + k.id + '">&larr; ' + esc(k.project) + "</button></div>" +
+      '<div class="hero"><h1>Progress claim #' + c.number + " " + badge(s) + '</h1><p class="lead">' + esc(p.builder) + " · work to " + dlong(c.claimDate) + " · served " + dlong(c.served) + "</p></div>" +
+      "<h2>SOPA clock</h2>" + clock +
+      '<div class="grid c2"><form class="card" id="f-sch" novalidate><h3>Payment schedule from the builder</h3><label for="sc-a">Amount certified (ex GST)</label><input id="sc-a" inputmode="decimal" placeholder="' + (t.exGst / 100).toFixed(2) + '" value="' + (c.scheduled != null ? (c.scheduled / 100).toFixed(2) : "") + '">' +
+      '<label for="sc-d">Date received</label><input id="sc-d" type="date" min="2025-01-01" max="2027-12-31" value="' + (c.schedRecv || TODAY) + '"><label for="sc-n">Builder\'s reasons for any reduction <span class="muted">(optional)</span></label><input id="sc-n" maxlength="300" value="' + esc(c.note || "") + '">' +
+      '<div class="row" style="margin-top:12px"><button class="btn quiet" type="submit">Save schedule</button></div><p class="small muted">Any shortfall rolls into your next claim automatically. Reasons not given in the schedule generally can\'t be raised later.</p></form>' +
+      '<form class="card" id="f-pay" novalidate><h3>Payment received</h3><label for="py-a">Total received for this claim (inc GST)</label><input id="py-a" inputmode="decimal" value="' + (c.paid ? (c.paid / 100).toFixed(2) : "") + '"><label for="py-d">Date</label><input id="py-d" type="date" min="2025-01-01" max="2027-12-31" value="' + (c.paidDate || TODAY) + '"><div class="row" style="margin-top:12px"><button class="btn quiet" type="submit">Save payment</button></div></form></div>' +
+      '<h2>The claim you send</h2><div class="sheet"><h3>PROGRESS CLAIM No. ' + c.number + "</h3>" + (c.sopa ? '<div class="sopa">This is a payment claim made under the Building and Construction Industry Security of Payment Act 1999 (NSW).</div>' : "") +
+      '<div class="kv"><div>From</div><div>' + esc(p.business) + "</div><div>To</div><div>" + esc(p.builder) + "</div><div>Project</div><div>" + esc(p.project) + (p.address ? ", " + esc(p.address) : "") + "</div><div>Reference</div><div>" + esc(p.ref || "-") + "</div><div>Work up to</div><div>" + dlong(c.claimDate) + "</div><div>Date served</div><div>" + dlong(c.served) + "</div></div>" +
+      '<div class="tw" style="margin-top:12px"><table class="st"><thead><tr><th>Item</th><th class="n">Value</th><th class="n">Previous</th><th class="n">This period</th><th class="n">To date</th></tr></thead><tbody>' + lines + "</tbody></table></div>" +
+      '<div style="margin-top:12px">' + totalsHtml(t) + '</div></div><div class="row"><button class="btn" data-action="copy" data-k="' + k.id + '" data-c="' + c.id + '">Copy claim as text</button><span class="small muted" id="copy-msg">The full app downloads this as a PDF.</span></div>' +
+      '<textarea id="copy-src" hidden readonly aria-label="Claim text">' + esc(sheetText(k, c)) + "</textarea></div>";
+  }
+
+  function vHow() {
+    return '<div class="stack"><div class="hero"><h1>How ClaimClock works</h1><p class="lead">Set a job up once. Each month, update progress, issue the claim, and let the clock watch the builder.</p></div>' +
+      '<div class="grid c2"><div class="card"><h3>Set up a contract, once</h3><p>Paste your quote lines from Excel. Set retention (for example 10% held per claim, capped at 5% of the contract, half back at practical completion) and payment terms (NSW maximums: schedule 10 business days, payment 20 for a subcontract).</p></div>' +
+      '<div class="card"><h3>Claim each month</h3><p>Last month\'s figures are filled in. Type the total done on each line as dollars or a percentage. Totals update as you type. Issue it with the date you sent it and it locks as your record.</p></div>' +
+      '<div class="card"><h3>The maths</h3><p>Claim = work done to date, less retention (never more than the cap), less what the builder certified before. If the builder certifies less than you claimed, next month uses the certified figure, so the gap is claimed again automatically.</p></div>' +
+      '<div class="card"><h3>The clock</h3><p>Business days skip weekends, NSW public holidays and 27 to 31 December, as the Act defines them. Miss the payment schedule and the builder may be liable for the full amount. ClaimClock shows the adjudication windows too.</p></div></div>' +
+      '<p class="small muted">A calculator, not legal advice. Check your contract and get advice before adjudication.</p><div class="row"><button class="btn" data-go="dashboard">Back to the demo</button></div></div>';
+  }
+
+  function render() {
+    document.querySelectorAll(".tab").forEach(function (t) { t.setAttribute("aria-current", t.dataset.go === view.name ? "page" : "false"); });
+    var k = view.k ? findK(view.k) : null, c = findC(k, view.c);
+    if ((view.name === "contract" && !k) || ((view.name === "edit" || view.name === "claim") && !c)) view = { name: "dashboard" };
+    app.innerHTML = view.name === "new" ? vNew() : view.name === "how" ? vHow() : view.name === "contract" ? vContract(k)
+      : view.name === "edit" ? vEdit(k, c) : view.name === "claim" ? vClaim(k, c) : vDashboard();
+  }
+
+  // ---------- live totals in the editor ----------
+  function readLine(inp) { return CC.parseProgress(inp.value, +inp.dataset.value, +inp.dataset.prev); }
+  app.addEventListener("input", function (e) {
+    if (!e.target.dataset.line || view.name !== "edit") return;
+    var k = findK(view.k), c = findC(k, view.c), td = {}, bad = false;
+    app.querySelectorAll("[data-line]").forEach(function (inp) {
+      var id = +inp.dataset.line, cell = document.getElementById("tp-" + id);
+      try { var v = readLine(inp); if (v > +inp.dataset.value) throw new Error("over"); td[id] = v; inp.removeAttribute("aria-invalid"); cell.textContent = fmt(v - +inp.dataset.prev); }
+      catch (err) { bad = true; inp.setAttribute("aria-invalid", "true"); cell.textContent = "check"; }
+    });
+    var t = computeFor(k, c, td);
+    [["t-cw", t.contractWork], ["t-v", t.variations], ["t-g", t.gross], ["t-x", t.exGst], ["t-gst", t.gstAmt], ["t-i", t.incGst]].forEach(function (p) { document.getElementById(p[0]).textContent = bad ? "-" : fmt(p[1]); });
+    document.getElementById("t-r").textContent = bad ? "-" : "(" + fmt(t.retentionHeld) + ")";
+  });
+
+  // ---------- clicks ----------
+  app.addEventListener("click", clicks); document.querySelector(".top").addEventListener("click", clicks);
+  var confirmReset = false;
+  function clicks(e) {
+    var b = e.target.closest("button"); if (!b) return;
+    if (b.dataset.go) { go(b.dataset.go); return; }
+    if (b.dataset.openK) { go("contract", +b.dataset.openK); return; }
+    if (b.dataset.openC) { var p = b.dataset.openC.split(":").map(Number), k = findK(p[0]), c = findC(k, p[1]); go(c.status === "draft" ? "edit" : "claim", p[0], p[1]); return; }
+    var a = b.dataset.action;
+    if (a === "reset") {
+      if (!confirmReset) { confirmReset = true; b.textContent = "Tap again to erase your changes"; b.classList.add("danger"); return; }
+      confirmReset = false; sampleState(); say("Demo reset to the sample job."); go("dashboard");
+    }
+    if (a === "delete-draft") {
+      if (b.dataset.armed !== "1") { b.dataset.armed = "1"; b.textContent = "Tap again to delete"; return; }
+      var k2 = findK(+b.dataset.k); k2.claims = k2.claims.filter(function (c) { return c.id !== +b.dataset.c; }); save(); say("Draft deleted."); go("contract", k2.id);
+    }
+    if (a === "copy") {
+      var src = document.getElementById("copy-src"), msg = document.getElementById("copy-msg");
+      var done = function () { msg.textContent = "Copied. Paste it into an email or document."; };
+      var fallback = function () { src.hidden = false; src.select(); msg.textContent = "Select all and copy the text above."; };
+      try { navigator.clipboard.writeText(src.value).then(done, fallback); } catch (err) { fallback(); }
+    }
+  }
+
+  // ---------- forms ----------
+  app.addEventListener("submit", function (e) {
+    e.preventDefault();
+    var f = e.target, val = function (id) { return document.getElementById(id).value.trim(); };
+    var k = view.k ? findK(view.k) : null, c = findC(k, view.c);
+    try {
+      if (f.id === "f-new") {
+        if (!val("n-b")) throw new Error("Builder name is required");
+        if (!val("n-p")) throw new Error("Project name is required");
+        var rows = CC.parseLines(val("n-l")), type = val("n-t");
+        var ints = function (id, lo, hi, name) { var n = Number(val(id)); if (!Number.isInteger(n) || n < lo || n > hi) throw new Error(name + ": whole number from " + lo + " to " + hi); return n; };
+        var nk = { id: nid(), builder: val("n-b"), builderEmail: val("n-e"), project: val("n-p"), address: "", ref: val("n-r"),
+          rateBp: CC.parsePercentBp(val("n-rr"), 20), capBp: CC.parsePercentBp(val("n-rc"), 20), pcBp: CC.parsePercentBp(val("n-rp"), 100),
+          dlp: ints("n-dl", 0, 60, "Defects liability period"), schedDays: ints("n-sd", 1, 10, "Payment schedule days"), payDays: ints("n-pd", 1, CC.MAX_PAY[type], "Payment days"),
+          type: type, gst: document.getElementById("n-g").checked, pcDate: "", status: "active", lines: [], claims: [] };
+        rows.forEach(function (r) { nk.lines.push({ id: nid(), kind: "contract", desc: r[0], value: r[1] }); });
+        state.contracts.unshift(nk); save(); say("Contract saved. Start your first claim below."); go("contract", nk.id); return;
+      }
+      if (f.id === "f-start") {
+        var per = val("s-m"), num = k.claims.length ? k.claims[k.claims.length - 1].number + 1 : 1, prev = k.claims.length ? k.claims[k.claims.length - 1].toDate : {};
+        var nc = { id: nid(), number: num, period: per, claimDate: CC.referenceDate(+per.slice(0, 4), +per.slice(5, 7)), status: "draft", sopa: true, toDate: Object.assign({}, prev) };
+        k.claims.push(nc); save(); go("edit", k.id, nc.id); return;
+      }
+      if (f.id === "f-var") {
+        if (!val("v-d")) throw new Error("Describe the variation");
+        var vv = CC.parseMoney(val("v-v")); if (vv <= 0) throw new Error("Variation value must be more than $0");
+        k.lines.push({ id: nid(), kind: "variation", status: val("v-s"), desc: val("v-d").slice(0, 200), value: vv });
+        save(); say("Variation added. It appears on your next draft claim."); go("contract", k.id); return;
+      }
+      if (f.id === "f-pc") {
+        var d = val("pc-d"); if (d && (d < "2025-01-01" || d > "2027-12-31")) throw new Error("Practical completion must be between 2025 and 2027");
+        k.pcDate = d; save(); say(d ? "Practical completion saved." : "Practical completion cleared."); go("contract", k.id); return;
+      }
+      if (f.id === "f-edit") {
+        var td = {};
+        app.querySelectorAll("[data-line]").forEach(function (inp) {
+          var name = inp.closest("tr").querySelector("label").textContent;
+          var v; try { v = readLine(inp); } catch (err) { throw new Error(name + ": " + err.message); }
+          if (v > +inp.dataset.value) throw new Error(name + ": more than the line value " + fmt(+inp.dataset.value));
+          td[+inp.dataset.line] = v;
+        });
+        c.toDate = td; c.sopa = document.getElementById("e-sopa").checked;
+        if ((e.submitter && e.submitter.dataset.intent) === "save") { save(); say("Draft saved."); render(); return; }
+        var served = val("e-served");
+        if (!/^\d{4}-\d{2}-\d{2}$/.test(served) || served < "2025-01-01" || served > "2027-12-31") throw new Error("Enter the date served (2025 to 2027)");
+        var stops = checkClaim(k, c).filter(function (x) { return x[0] === "stop"; });
+        if (stops.length) throw new Error(stops[0][1]);
+        issue(k, c, served); save();
+        say(served < c.claimDate ? "Claim issued. Heads up: served before the reference date, which is only valid if your contract allows earlier claims." : "Claim issued. The SOPA clock is running.", served < c.claimDate);
+        go("claim", k.id, c.id); return;
+      }
+      if (f.id === "f-sch") {
+        var amt = CC.parseMoney(val("sc-a")), rec = val("sc-d");
+        if (!rec || rec < c.served || rec > "2027-12-31") throw new Error("The schedule date must be on or after the date served");
+        c.scheduled = amt; c.schedRecv = rec; c.note = val("sc-n").slice(0, 300); save(); say("Payment schedule recorded."); render(); return;
+      }
+      if (f.id === "f-pay") {
+        var pa = CC.parseMoney(val("py-a") || "0"), pd = val("py-d");
+        if (!pd || pd < c.served) throw new Error("The payment date can't be before the claim was served");
+        c.paid = pa; c.paidDate = pd; save(); say("Payment recorded."); render(); return;
+      }
+    } catch (err) {
+      // keep what the person typed: show the error in place instead of re-rendering the form
+      var old = app.querySelector(".flash"); if (old) old.remove();
+      var div = document.createElement("div"); div.className = "flash err"; div.setAttribute("role", "alert"); div.textContent = err.message;
+      app.firstElementChild.insertBefore(div, app.firstElementChild.firstChild); div.scrollIntoView({ block: "center" });
+    }
+  });
+
+  state = load(); if (!state) sampleState();
+  var h = (location.hash || "").slice(1); if (h === "how" || h === "new") view = { name: h };
+  render();
+})();
+</script>
+
+</body>
+</html>
